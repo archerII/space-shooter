@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Űrvadász - Space Shooter</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Press Start 2P', monospace;
+            overflow: hidden;
+        }
+
+        /* Starfield background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+                radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.7), transparent),
+                radial-gradient(1px 1px at 160px 120px, #fff, transparent),
+                radial-gradient(2px 2px at 200px 50px, #0ff, transparent),
+                radial-gradient(1px 1px at 220px 150px, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1px 1px at 280px 90px, #fff, transparent),
+                radial-gradient(2px 2px at 320px 180px, #f0f, transparent);
+            background-size: 350px 200px;
+            animation: stars 20s linear infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes stars {
+            from { transform: translateY(0); }
+            to { transform: translateY(200px); }
+        }
+
+        h1 {
+            color: #0ff;
+            text-shadow:
+                0 0 10px #0ff,
+                0 0 20px #0ff,
+                0 0 40px #0ff;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; }
+            to { text-shadow: 0 0 20px #0ff, 0 0 40px #0ff, 0 0 60px #0ff; }
+        }
+
+        #gameContainer {
+            position: relative;
+            border: 4px solid #0ff;
+            box-shadow:
+                0 0 20px #0ff,
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(180deg, #0a0a1a 0%, #1a0a2a 50%, #0a1a2a 100%);
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #fff;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .score {
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        .lives {
+            color: #f00;
+            text-shadow: 0 0 10px #f00;
+        }
+
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            text-align: center;
+            gap: 20px;
+        }
+
+        #gameOverScreen {
+            display: none;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 10px;
+            margin-top: -10px;
+        }
+
+        .startBtn {
+            background: transparent;
+            border: 3px solid #0ff;
+            color: #0ff;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .startBtn:hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 30px #0ff;
+        }
+
+        .finalScore {
+            color: #0f0;
+            font-size: 24px;
+            text-shadow: 0 0 20px #0f0;
+        }
+
+        .controls {
+            font-size: 8px;
+            color: #666;
+            margin-top: 20px;
+            line-height: 2;
+        }
+
+        .controls span {
+            color: #ff0;
+        }
+
+        .controls.mobile {
+            display: none;
+        }
+
+        /* Mobile controls */
+        #mobileControls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .mobile-btn {
+            width: 70px;
+            height: 70px;
+            border: 3px solid rgba(0, 255, 255, 0.6);
+            border-radius: 50%;
+            background: rgba(0, 255, 255, 0.15);
+            color: #0ff;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            transition: all 0.1s;
+        }
+
+        .mobile-btn:active, .mobile-btn.active {
+            background: rgba(0, 255, 255, 0.4);
+            box-shadow: 0 0 20px #0ff;
+            transform: scale(0.95);
+        }
+
+        .fire-btn {
+            width: 90px;
+            height: 90px;
+            border-color: rgba(0, 255, 0, 0.6);
+            background: rgba(0, 255, 0, 0.15);
+            color: #0f0;
+            font-size: 14px;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .fire-btn:active, .fire-btn.active {
+            background: rgba(0, 255, 0, 0.4);
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        /* Touch device detection */
+        @media (hover: none) and (pointer: coarse) {
+            #mobileControls {
+                display: flex;
+            }
+
+            .controls.desktop {
+                display: none;
+            }
+
+            .controls.mobile {
+                display: block;
+            }
+
+            #gameCanvas {
+                max-width: 100vw;
+                max-height: 70vh;
+            }
+
+            h1 {
+                font-size: 1rem;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Prevent pull-to-refresh and other gestures */
+        html, body {
+            overscroll-behavior: none;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 ŰRVADÁSZ 🚀</h1>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="600" height="700"></canvas>
+
+        <div id="ui">
+            <div class="score">PONT: <span id="scoreDisplay">0</span></div>
+            <div class="lives">ÉLET: <span id="livesDisplay">❤❤❤</span></div>
+        </div>
+
+        <div id="startScreen">
+            <div style="font-size: 40px;">🚀</div>
+            <div style="color: #0ff; font-size: 14px;">ŰRVADÁSZ</div>
+            <div class="subtitle">Space Shooter</div>
+            <button class="startBtn" onclick="startGame()">▶ INDÍTÁS</button>
+            <div class="controls desktop">
+                <span>← →</span> vagy <span>A D</span> mozgás<br>
+                <span>SPACE</span> lövés
+            </div>
+            <div class="controls mobile">
+                Használd a gombokat lent!
+            </div>
+        </div>
+
+        <div id="gameOverScreen">
+            <div style="color: #f00; font-size: 18px;">GAME OVER</div>
+            <div>Végső pontszám:</div>
+            <div class="finalScore" id="finalScore">0</div>
+            <button class="startBtn" onclick="startGame()">↻ ÚJRA</button>
+        </div>
+
+        <div id="mobileControls">
+            <div class="mobile-btn" id="leftBtn">◀</div>
+            <div class="mobile-btn fire-btn" id="fireBtn">TŰZ</div>
+            <div class="mobile-btn" id="rightBtn">▶</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
+        const finalScoreDisplay = document.getElementById('finalScore');
+
+        // Game state
+        let gameRunning = false;
+        let score = 0;
+        let lives = 3;
+        let player, bullets, enemies, particles, stars;
+        let lastEnemySpawn = 0;
+        let enemySpawnRate = 1500;
+        let difficulty = 1;
+
+        // Input
+        const keys = {};
+
+        // Player ship
+        class Player {
+            constructor() {
+                this.width = 50;
+                this.height = 40;
+                this.x = canvas.width / 2 - this.width / 2;
+                this.y = canvas.height - 80;
+                this.speed = 6;
+                this.lastShot = 0;
+                this.shootDelay = 200;
+            }
+
+            update() {
+                if (keys['ArrowLeft'] || keys['KeyA']) {
+                    this.x -= this.speed;
+                }
+                if (keys['ArrowRight'] || keys['KeyD']) {
+                    this.x += this.speed;
+                }
+
+                // Boundaries
+                this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
+
+                // Shooting
+                if (keys['Space'] && Date.now() - this.lastShot > this.shootDelay) {
+                    this.shoot();
+                    this.lastShot = Date.now();
+                }
+            }
+
+            shoot() {
+                bullets.push(new Bullet(this.x + this.width / 2, this.y));
+                // Muzzle flash particles
+                for (let i = 0; i < 5; i++) {
+                    particles.push(new Particle(
+                        this.x + this.width / 2,
+                        this.y,
+                        '#0ff',
+                        (Math.random() - 0.5) * 3,
+                        -Math.random() * 3 - 2
+                    ));
+                }
+            }
+
+            draw() {
+                // Spaceship body
+                ctx.fillStyle = '#0ff';
+                ctx.shadowColor = '#0ff';
+                ctx.shadowBlur = 15;
+
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.width / 2, this.y);
+                ctx.lineTo(this.x + this.width, this.y + this.height);
+                ctx.lineTo(this.x + this.width * 0.7, this.y + this.height * 0.7);
+                ctx.lineTo(this.x + this.width * 0.3, this.y + this.height * 0.7);
+                ctx.lineTo(this.x, this.y + this.height);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cockpit
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(this.x + this.width / 2, this.y + 15, 6, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Engine glow
+                ctx.fillStyle = '#f80';
+                ctx.shadowColor = '#f80';
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.width * 0.35, this.y + this.height * 0.7);
+                ctx.lineTo(this.x + this.width / 2, this.y + this.height + Math.random() * 10 + 5);
+                ctx.lineTo(this.x + this.width * 0.65, this.y + this.height * 0.7);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Bullet
+        class Bullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 4;
+                this.height = 15;
+                this.speed = 10;
+            }
+
+            update() {
+                this.y -= this.speed;
+            }
+
+            draw() {
+                ctx.fillStyle = '#0f0';
+                ctx.shadowColor = '#0f0';
+                ctx.shadowBlur = 10;
+                ctx.fillRect(this.x - this.width / 2, this.y, this.width, this.height);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Enemy
+        class Enemy {
+            constructor() {
+                this.width = 40;
+                this.height = 35;
+                this.x = Math.random() * (canvas.width - this.width);
+                this.y = -this.height;
+                this.speed = 2 + Math.random() * difficulty;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.wobbleSpeed = 0.05 + Math.random() * 0.03;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.wobble += this.wobbleSpeed;
+                this.x += Math.sin(this.wobble) * 1.5;
+            }
+
+            draw() {
+                // Alien ship
+                ctx.fillStyle = '#f0f';
+                ctx.shadowColor = '#f0f';
+                ctx.shadowBlur = 10;
+
+                // Main body
+                ctx.beginPath();
+                ctx.ellipse(this.x + this.width / 2, this.y + this.height / 2, this.width / 2, this.height / 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Dome
+                ctx.fillStyle = '#ff0';
+                ctx.beginPath();
+                ctx.arc(this.x + this.width / 2, this.y + this.height / 2 - 5, 10, Math.PI, 0);
+                ctx.fill();
+
+                // Eyes
+                ctx.fillStyle = '#f00';
+                ctx.beginPath();
+                ctx.arc(this.x + this.width / 2 - 5, this.y + this.height / 2, 3, 0, Math.PI * 2);
+                ctx.arc(this.x + this.width / 2 + 5, this.y + this.height / 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Particle
+        class Particle {
+            constructor(x, y, color, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.vx = vx;
+                this.vy = vy;
+                this.life = 1;
+                this.decay = 0.02 + Math.random() * 0.02;
+                this.size = 3 + Math.random() * 4;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+                this.vy += 0.1; // gravity
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Background star
+        class Star {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * canvas.height;
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = -5;
+                this.size = Math.random() * 2 + 1;
+                this.speed = this.size * 0.5 + 0.5;
+                this.brightness = Math.random() * 0.5 + 0.5;
+            }
+
+            update() {
+                this.y += this.speed;
+                if (this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.brightness})`;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+            }
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                const angle = (Math.PI * 2 / 15) * i;
+                const speed = 2 + Math.random() * 4;
+                particles.push(new Particle(
+                    x, y, color,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed
+                ));
+            }
+        }
+
+        function checkCollision(a, b) {
+            return a.x < b.x + b.width &&
+                   a.x + a.width > b.x &&
+                   a.y < b.y + b.height &&
+                   a.y + a.height > b.y;
+        }
+
+        function updateUI() {
+            scoreDisplay.textContent = score;
+            livesDisplay.textContent = '❤'.repeat(Math.max(0, lives));
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            finalScoreDisplay.textContent = score;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        function startGame() {
+            // Reset
+            score = 0;
+            lives = 3;
+            difficulty = 1;
+            enemySpawnRate = 1500;
+
+            player = new Player();
+            bullets = [];
+            enemies = [];
+            particles = [];
+            stars = [];
+
+            // Create background stars
+            for (let i = 0; i < 50; i++) {
+                stars.push(new Star());
+            }
+
+            updateUI();
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            gameRunning = true;
+            lastEnemySpawn = Date.now();
+
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            // Clear
+            ctx.fillStyle = 'rgba(10, 10, 26, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw stars
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            // Spawn enemies
+            if (Date.now() - lastEnemySpawn > enemySpawnRate) {
+                enemies.push(new Enemy());
+                lastEnemySpawn = Date.now();
+
+                // Increase difficulty
+                difficulty += 0.05;
+                enemySpawnRate = Math.max(500, enemySpawnRate - 10);
+            }
+
+            // Update player
+            player.update();
+            player.draw();
+
+            // Update bullets
+            bullets = bullets.filter(bullet => {
+                bullet.update();
+                bullet.draw();
+                return bullet.y > -bullet.height;
+            });
+
+            // Update enemies
+            enemies = enemies.filter(enemy => {
+                enemy.update();
+                enemy.draw();
+
+                // Check collision with player
+                if (checkCollision(enemy, player)) {
+                    createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, '#f0f');
+                    lives--;
+                    updateUI();
+                    if (lives <= 0) {
+                        createExplosion(player.x + player.width / 2, player.y + player.height / 2, '#0ff');
+                        gameOver();
+                    }
+                    return false;
+                }
+
+                // Check if enemy passed
+                if (enemy.y > canvas.height) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            // Check bullet-enemy collisions
+            bullets = bullets.filter(bullet => {
+                let hit = false;
+                enemies = enemies.filter(enemy => {
+                    if (checkCollision(bullet, enemy)) {
+                        createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, '#f0f');
+                        score += 100;
+                        updateUI();
+                        hit = true;
+                        return false;
+                    }
+                    return true;
+                });
+                return !hit;
+            });
+
+            // Update particles
+            particles = particles.filter(particle => {
+                particle.update();
+                particle.draw();
+                return particle.life > 0;
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Input handling
+        document.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'Space') e.preventDefault();
+        });
+
+        document.addEventListener('keyup', e => {
+            keys[e.code] = false;
+        });
+
+        // Mobile controls
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const fireBtn = document.getElementById('fireBtn');
+
+        // Helper to handle both touch and mouse
+        function addButtonListeners(btn, keyCode) {
+            // Touch events
+            btn.addEventListener('touchstart', e => {
+                e.preventDefault();
+                keys[keyCode] = true;
+                btn.classList.add('active');
+            }, { passive: false });
+
+            btn.addEventListener('touchend', e => {
+                e.preventDefault();
+                keys[keyCode] = false;
+                btn.classList.remove('active');
+            }, { passive: false });
+
+            btn.addEventListener('touchcancel', e => {
+                keys[keyCode] = false;
+                btn.classList.remove('active');
+            });
+
+            // Mouse events (for testing on desktop)
+            btn.addEventListener('mousedown', e => {
+                e.preventDefault();
+                keys[keyCode] = true;
+                btn.classList.add('active');
+            });
+
+            btn.addEventListener('mouseup', e => {
+                keys[keyCode] = false;
+                btn.classList.remove('active');
+            });
+
+            btn.addEventListener('mouseleave', e => {
+                keys[keyCode] = false;
+                btn.classList.remove('active');
+            });
+        }
+
+        addButtonListeners(leftBtn, 'ArrowLeft');
+        addButtonListeners(rightBtn, 'ArrowRight');
+        addButtonListeners(fireBtn, 'Space');
+
+        // Prevent default touch behaviors on canvas
+        canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+        canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+        // Prevent zoom on double tap
+        document.addEventListener('dblclick', e => e.preventDefault());
+    </script>
+</body>
+</html>
