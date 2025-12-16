@@ -172,6 +172,40 @@
             display: none;
         }
 
+        /* Language switcher */
+        .lang-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+            font-size: 10px;
+            z-index: 100;
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            color: rgba(0, 255, 255, 0.5);
+            padding: 8px 12px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .lang-btn:hover {
+            border-color: rgba(0, 255, 255, 0.6);
+            color: rgba(0, 255, 255, 0.8);
+        }
+
+        .lang-btn.active {
+            background: #0ff;
+            color: #000;
+            border-color: #0ff;
+            box-shadow: 0 0 15px #0ff;
+        }
+
         /* Mobile controls */
         #mobileControls {
             display: none;
@@ -272,29 +306,33 @@
         <canvas id="gameCanvas" width="600" height="700"></canvas>
 
         <div id="ui">
-            <div class="score">PONT: <span id="scoreDisplay">0</span></div>
-            <div class="lives">ÉLET: <span id="livesDisplay">❤❤❤</span></div>
+            <div class="score"><span id="scoreLabel">PONT</span>: <span id="scoreDisplay">0</span></div>
+            <div class="lives"><span id="livesLabel">ÉLET</span>: <span id="livesDisplay">❤❤❤</span></div>
         </div>
 
         <div id="startScreen">
+            <div class="lang-switcher">
+                <button class="lang-btn active" onclick="setLanguage('hu')">HU</button>
+                <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+            </div>
             <div style="font-size: 40px;">🚀</div>
-            <div style="color: #0ff; font-size: 14px;">ŰRVADÁSZ</div>
-            <div class="subtitle">Space Shooter</div>
-            <button class="startBtn" onclick="startGame()">▶ INDÍTÁS</button>
+            <div id="gameTitle" style="color: #0ff; font-size: 14px;">ŰRVADÁSZ</div>
+            <div id="gameSubtitle" class="subtitle">Space Shooter</div>
+            <button class="startBtn" onclick="startGame()"><span id="startBtnText">▶ INDÍTÁS</span></button>
             <div class="controls desktop">
-                <span>← →</span> vagy <span>A D</span> mozgás<br>
-                <span>SPACE</span> lövés
+                <span>← →</span> <span id="orText">vagy</span> <span>A D</span> <span id="moveText">mozgás</span><br>
+                <span>SPACE</span> <span id="shootText">lövés</span>
             </div>
             <div class="controls mobile">
-                Használd a gombokat lent!
+                <span id="mobileControlText">Használd a gombokat lent!</span>
             </div>
         </div>
 
         <div id="gameOverScreen">
             <div style="color: #f00; font-size: 18px;">GAME OVER</div>
-            <div>Végső pontszám:</div>
+            <div id="finalScoreLabel">Végső pontszám:</div>
             <div class="finalScore" id="finalScore">0</div>
-            <button class="startBtn" onclick="startGame()">↻ ÚJRA</button>
+            <button class="startBtn" onclick="startGame()"><span id="retryBtnText">↻ ÚJRA</span></button>
         </div>
 
         <div id="mobileControls">
@@ -314,6 +352,64 @@
         const scoreDisplay = document.getElementById('scoreDisplay');
         const livesDisplay = document.getElementById('livesDisplay');
         const finalScoreDisplay = document.getElementById('finalScore');
+
+        // Language system
+        let currentLang = 'hu';
+        const translations = {
+            hu: {
+                title: 'ŰRVADÁSZ',
+                subtitle: 'Space Shooter',
+                start: '▶ INDÍTÁS',
+                retry: '↻ ÚJRA',
+                score: 'PONT',
+                lives: 'ÉLET',
+                finalScore: 'Végső pontszám:',
+                or: 'vagy',
+                move: 'mozgás',
+                shoot: 'lövés',
+                mobileControls: 'Használd a gombokat lent!',
+                fire: 'TŰZ'
+            },
+            en: {
+                title: 'SPACE HUNTER',
+                subtitle: 'Space Shooter',
+                start: '▶ START',
+                retry: '↻ RETRY',
+                score: 'SCORE',
+                lives: 'LIVES',
+                finalScore: 'Final Score:',
+                or: 'or',
+                move: 'move',
+                shoot: 'shoot',
+                mobileControls: 'Use the buttons below!',
+                fire: 'FIRE'
+            }
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+
+            // Update all text elements
+            document.getElementById('gameTitle').textContent = t.title;
+            document.getElementById('gameSubtitle').textContent = t.subtitle;
+            document.getElementById('startBtnText').textContent = t.start;
+            document.getElementById('retryBtnText').textContent = t.retry;
+            document.getElementById('scoreLabel').textContent = t.score;
+            document.getElementById('livesLabel').textContent = t.lives;
+            document.getElementById('finalScoreLabel').textContent = t.finalScore;
+            document.getElementById('orText').textContent = t.or;
+            document.getElementById('moveText').textContent = t.move;
+            document.getElementById('shootText').textContent = t.shoot;
+            document.getElementById('mobileControlText').textContent = t.mobileControls;
+            document.getElementById('fireBtn').textContent = t.fire;
+
+            // Update active button
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
 
         // Game state
         let gameRunning = false;
