@@ -224,6 +224,11 @@
             box-shadow: 0 0 20px #0f0;
         }
 
+        .direction-controls {
+            display: flex;
+            gap: 10px;
+        }
+
         /* Touch device detection */
         @media (hover: none) and (pointer: coarse) {
             #mobileControls {
@@ -240,12 +245,16 @@
 
             #gameCanvas {
                 max-width: 100vw;
-                max-height: 70vh;
+                max-height: 85vh;
             }
 
             h1 {
                 font-size: 1rem;
                 margin-bottom: 10px;
+            }
+
+            #gameContainer {
+                max-height: 100vh;
             }
         }
 
@@ -289,9 +298,11 @@
         </div>
 
         <div id="mobileControls">
-            <div class="mobile-btn" id="leftBtn">◀</div>
             <div class="mobile-btn fire-btn" id="fireBtn">TŰZ</div>
-            <div class="mobile-btn" id="rightBtn">▶</div>
+            <div class="direction-controls">
+                <div class="mobile-btn" id="leftBtn">◀</div>
+                <div class="mobile-btn" id="rightBtn">▶</div>
+            </div>
         </div>
     </div>
 
